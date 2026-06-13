@@ -1,0 +1,67 @@
+
+build/
+install/
+log/
+
+
+.colcon/
+
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+
+
+.vscode/
+
+
+
+.idea/
+
+
+
+.DS_Store
+
+
+
+**pycache**/
+*.pyc
+*.pyo
+
+
+
+*.swp
+*.swo
+*~
+
+
+tmp/
+output/
+debug/
+*.jpg
+*.jpeg
+*.png
+
+
+
+*.db3
+*.mcap
+
+
+
+*.log
+
+
+# ONNX / Model Files
+
+# Uncomment if model files become large
+
+
+# models/*.onnx
+# models/*.pt
+# models/*.pth
+
+docker-data/

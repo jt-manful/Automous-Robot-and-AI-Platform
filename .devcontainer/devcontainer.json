@@ -1,0 +1,16 @@
+{
+    "name": "ROS2 Jazzy",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "ros2",
+    "workspaceFolder": "/robot_ws",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-iot.vscode-ros",
+                "ms-python.python"
+            ]
+        }
+    }
+}

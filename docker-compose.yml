@@ -1,0 +1,17 @@
+services:
+  ros2:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile
+
+    container_name: ros2_jazzy
+    
+    stdin_open: true
+    tty: true
+
+    volumes:
+      - .:/robot_ws
+
+    working_dir: /robot_ws
+
+    command: bash
