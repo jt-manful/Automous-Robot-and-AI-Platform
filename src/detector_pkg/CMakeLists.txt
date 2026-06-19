@@ -9,6 +9,7 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(vision_msgs REQUIRED)
 
 add_executable(detector_node
   src/main.cpp

@@ -1,6 +1,39 @@
 # DEV Log
 
 ---
+# Log Entry 2
+**Date:** 2026-06-19.
+
+**Package worked on:** `detector_pkg` 
+
+## Summary
+Today's task was to finsih phase 3 transition from image processing to object detection 
+
+Turning the DectionNode from 
+DetectorNode
+ ├── subscribes: raw image
+ ├── processes: OpenCV (for now)
+ └── publishes: debug image
+```
+to
+
+```
+DetectorNode
+ ├── subscribes: camera/image_raw
+├── converts: ROS → OpenCV
+├── runs: ML model (ONNX Runtime)
+├── outputs:
+│    ├── /detections (vision_msgs/Detection2DArray)
+│    └── /debug_image (optional visualization)
+```
+
+We are switching to vision_msgs which are standardized set of ROS 2 message types designed for computer vision and object recognition pipelines. Its main feature  2D and 3D object detection using bounding boxes and spatial poses. it also has object classification metadata such as class IDs and confidence scores. 
+
+I intially planned to create a custom msg but after a little conversation with my big brother I learnt about vision_msg and it honeslty simplifies my work.
+
+
+
+
 
 # Log Entry 1
 **Date:** 2026-06-13.
@@ -75,3 +108,7 @@ Copy saved debug frame out of the container (run on Mac host, not inside contain
 docker ps
 docker cp <container_id>:/tmp/latest_frame.jpg ./latest_frame.jpg
 ```
+
+
+
+

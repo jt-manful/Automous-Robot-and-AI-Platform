@@ -1,17 +1,9 @@
 #include "detector_pkg/detector_node.hpp"
 
 
-// reate package
-// ✓ Subscribe to Image topic
-// ✓ Convert Image → cv::Mat
-// ✓ Draw rectangle on image
-// ✓ Publish debug image
-// ✓ Launch file
-// ✓ YAML config
-
 DetectorNode::DetectorNode() : Node("detector_node"){
     //subscribes to raw can image
-    subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
+    image_subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
         "/camera/image_raw", //topic
         10,
         std::bind(&DetectorNode::image_callback,
@@ -24,69 +16,130 @@ DetectorNode::DetectorNode() : Node("detector_node"){
 
 
 
-   // publisher
+   // publishers
    debug_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
-    "/detector/debug_image", // which topic
+    "/debug/image", 
     10
    );
 
-    RCLCPP_INFO(this->get_logger(),
-        "pulishing to debug on - /detector/debug_image");
+   detection_publisher_ = this->create_publisher<vision_msgs::msg::Detection2DArray>(
+    "/detections",
+    10
+);
 
+   
 
 
 }
 
+/
 void DetectorNode::image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
-    // log incoming image a look at basic features
-    RCLCPP_INFO(this->get_logger(),
-        "Image Received | %u x %u | encoding: %s",
-        msg->height,
-        msg->width,
-        msg->encoding.c_str()
-
-
-    );
-    
-    // convert from ros image to somethign useable by open cv
-    cv_bridge::CvImagePtr cv_ptr;
-    try{
-        cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
-    }
-    catch (cv_bridge::Exception& e){
-        RCLCPP_ERROR(
-            this->get_logger(),
-            "cv_bridge exception: %s", e.what());
-    }
-    cv::Mat image = cv_ptr->image;
-    cv::rectangle(image,
-              cv::Point(50,50),
-              cv::Point(200,200),
-              cv::Scalar(0,255,0),
-              2);
-    // cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
-    debug_callback(image);
-    
-
+    // image to csv
+    auto image = ros_to_csv(msg);
+    cv::Mat debug_img = image.clone(); // for debug
+    // run detection
+    auto detections = run_detections(image);
+    // publish detections
+    publish_detections(detections); 
+    // publish debug
+    draw_boxes(debug_img, detections);
+    publish_debug(debug_img);
 
 }
 
 
-void DetectorNode::debug_callback(const cv::Mat & image){
-    // convert image back and send it 
-   sensor_msgs::msg::Image::SharedPtr msg =
+
+
+cv::Mat DetectorNode::pros_to_cv(const sensor_msgs::msg::Image::SharedPtr msg){
+    return cv_bridge::toCvCopy(msg, "bgr8")->image;
+}
+
+
+std::vector<Detection> DetectorNode::prun_detections(const cv::Mat& image){
+    // dummy data to keep the system from breaking
+    Detection detection = {50, 50, 150, 150, "object", 0.9};
+    return {detection};
+}
+
+
+void DetectorNode::publish_debug(const cv::Mat & image){
+        
+    sensor_msgs::msg::Image::SharedPtr msg =
         cv_bridge::CvImage(
             std_msgs::msg::Header(),
             "bgr8",
             image
         ).toImageMsg();
 
-        cv::imwrite("/tmp/latest_frame.jpg", image);
 
-        debug_publisher_->publish(*msg);
-        RCLCPP_INFO(this->get_logger(),
-        "image published and saved to  - /tmp/latest_frame.jpg");
+        debug_publisher_->publish(
+            *msg
+        );
+
+
+        RCLCPP_INFO(
+            this->get_logger(),
+            "image published and saved to  - /tmp/latest_frame.jpg"
+        );
 
 }
 
-docker cp 176263c466b7:/tmp/latest_frame.jpg ./latest_frame.jpg
+
+void DetectionNode::draw_boxes(const cv::Mat &image, std::vector<Detection>& detections){
+    for (const auto& d : detections){
+        cv::rectangle(
+            image,
+            cv::Rect(d.x, d.y, d.width, d.height),
+            cv::Scalar(0,255,0),
+            2
+        );
+
+        cv::putText(
+            debug_img,
+            d.label,
+            cv::Point(d.x, d.y - 5),
+            cv::FONT_HERSHEY_SIMPLEX,
+            0.5,
+            cv::Scalar(0,255,0)
+        );
+    }
+}
+
+
+void DetectorNode::publish_detections(std::vector<Detection>& detections){
+
+    // construct msg 
+    vision_msgs::msg::Detection2DArray msg;
+    msg.header.stamp = this->now();
+    msg.header.frame_id = "camera";
+    
+    for (const auto& d : detections){
+        vision_msgs::msg::Detection2D det;
+
+        //detectors output boxes in top left corner
+        // shift to "center"
+        det.bbox.center.position.x =
+        d.x + d.width / 2.0;
+
+        det.bbox.center.position.y =
+            d.y + d.height / 2.0;
+
+        det.bbox.size_x = d.width;
+        det.bbox.size_y = d.height;
+
+        vision_msgs::msg::ObjectHypothesisWithPose hyp;
+        hyp.hypothesis.class_id = d.label;
+        hyp.hypothesis.score = d.score;
+
+        det.results.push_back(hyp);
+
+        msg.detections.push_back(det);
+    }
+
+    // publish
+    detection_publisher_ ->publish(msg);
+
+    RCLCPP_INFO(this->get_logger(),
+        "pulishing to debug on - /detector/debug_image");
+
+}
