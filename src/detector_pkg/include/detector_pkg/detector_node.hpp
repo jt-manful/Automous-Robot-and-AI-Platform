@@ -30,18 +30,18 @@ private:
     void image_callback(
         const sensor_msgs::msg::Image::SharedPtr msg); // subscribe to raw image
     
-    cv::Mat ros_to_cv(
+    cv::Mat ros_to_csv(
         const sensor_msgs::msg::Image::SharedPtr msg);
 
     std::vector<Detection> run_detections(
         const cv::Mat& image); 
 
     void draw_boxes(
-        cv::Mat &image,
+        cv::Mat& image,
         const std::vector<Detection>& detections);
 
     void publish_detections(
-        std::vector<Detection> detections);
+        std::vector<Detection>& detections);
 
     void publish_debug(
         const cv::Mat &image);

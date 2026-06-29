@@ -32,7 +32,7 @@ DetectorNode::DetectorNode() : Node("detector_node"){
 
 }
 
-/
+
 void DetectorNode::image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
     // image to csv
     auto image = ros_to_csv(msg);
@@ -50,12 +50,12 @@ void DetectorNode::image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
 
 
 
-cv::Mat DetectorNode::pros_to_cv(const sensor_msgs::msg::Image::SharedPtr msg){
+cv::Mat DetectorNode::ros_to_csv(const sensor_msgs::msg::Image::SharedPtr msg){
     return cv_bridge::toCvCopy(msg, "bgr8")->image;
 }
 
 
-std::vector<Detection> DetectorNode::prun_detections(const cv::Mat& image){
+std::vector<Detection> DetectorNode::run_detections(const cv::Mat& image){
     // dummy data to keep the system from breaking
     Detection detection = {50, 50, 150, 150, "object", 0.9};
     return {detection};
@@ -85,7 +85,7 @@ void DetectorNode::publish_debug(const cv::Mat & image){
 }
 
 
-void DetectionNode::draw_boxes(const cv::Mat &image, std::vector<Detection>& detections){
+void DetectorNode::draw_boxes(cv::Mat &image, const std::vector<Detection>& detections){
     for (const auto& d : detections){
         cv::rectangle(
             image,
@@ -95,7 +95,7 @@ void DetectionNode::draw_boxes(const cv::Mat &image, std::vector<Detection>& det
         );
 
         cv::putText(
-            debug_img,
+            image,
             d.label,
             cv::Point(d.x, d.y - 5),
             cv::FONT_HERSHEY_SIMPLEX,

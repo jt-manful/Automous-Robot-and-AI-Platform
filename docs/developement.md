@@ -31,7 +31,8 @@ We are switching to vision_msgs which are standardized set of ROS 2 message type
 
 I intially planned to create a custom msg but after a little conversation with my big brother I learnt about vision_msg and it honeslty simplifies my work.
 
-
+Now for the real task I followed a tutorial by this guy:
+https://medium.com/@taffealexander/object-detection-with-yolo-and-onnx-runtime-in-c-c8bfb964520b
 
 
 
