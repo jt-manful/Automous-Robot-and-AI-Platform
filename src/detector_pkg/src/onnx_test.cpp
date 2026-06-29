@@ -7,7 +7,7 @@ int main() {
     Ort::SessionOptions session_options;
     session_options.SetIntraOpNumThreads(1);
 
-    Ort::Session session(env, "model.onnx", session_options);
+    Ort::Session session(env, "models/yolo11n.onnx", session_options);
 
     std::cout << "ONNX model loaded successfully!" << std::endl;
 
